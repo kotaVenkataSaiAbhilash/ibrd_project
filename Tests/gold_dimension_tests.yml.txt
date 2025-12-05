@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: dim_loan
+    columns:
+      - name: LOAN_SK
+        tests:
+          - unique
+          - not_null
+
+      - name: LOAN_NUMBER
+        tests:
+          - not_null
+
+    tests:
+      - name: dim_country
+        columns:
+        - name: COUNTRY_KEY
+        tests:
+          - unique
+          - not_null
+
+      - name: COUNTRY_CODE
+        tests:
+          - not_null
+  - name: dim_project
+    columns:
+      - name: PROJECT_KEY
+        tests:
+          - unique
+          - not_null
+      - name: PROJECT_ID
+        tests:
+          - unique
+          - not_null

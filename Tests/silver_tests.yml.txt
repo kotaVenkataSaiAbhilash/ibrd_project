@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: silver_master
+    columns:
+
+      - name: LOAN_NUMBER
+        tests:
+          - not_null
+
+      - name: END_OF_PERIOD
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: '1900-01-01'
+              max_value: '2100-01-01'
+
+      - name: LOAN_STATUS
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Active','Repaid','Fully Repaid','Cancelled']
+
+      - name: DISBURSED_AMOUNT_USD
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "DISBURSED_AMOUNT_USD >= 0"
+
+      - name: INTEREST_RATE
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "TRY_TO_NUMBER(INTEREST_RATE) >= 0"
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - LOAN_NUMBER
+            - END_OF_PERIOD
