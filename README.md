@@ -1,7 +1,7 @@
-# ibrd-loan-management-efficiency
+# IBRD-Loan-Management-Efficiency
 
 # 💸 Enhancing Loan Management Efficiency for IBRD  
-### A Modern Data Engineering Case Study with Snowflake, dbt & AWS
+### A Modern Data Engineering Case Study with Snowflake, DBT & AWS
 
 ---
 
@@ -24,7 +24,8 @@ This project focuses on building a cloud-native data platform to analyze histori
 ## 🛠 Tech Stack
 
 - ❄ Snowflake (Snowpark, Snowpipe, Streams & Tasks)  
-- 🧱 dbt Cloud/Core  
+- 🧱 dbt Cloud/Core
+- 🌟 AWS GLUE with Pyspark
 - ☁ AWS S3 (external stages & storage options)  
 - ⚡ Streaming / Real-time ingestion (Snowflake Streaming, optionally Spark Streaming)  
 - 📊 BI / Dashboards (any tool – e.g., Power BI, Tableau, Streamlit, etc.)
@@ -37,9 +38,6 @@ This project focuses on building a cloud-native data platform to analyze histori
   - IBRD Statement Of Loans – Historical Data  
   - https://finances.worldbank.org/Loans-and-Credits/IBRD-Statement-Of-Loans-Historical-Data/zucq-nrc3  
 
-- Streaming / Latest Data  
-  - GitHub: https://github.com/akgeoinsys/finance-ibrd  
-
 ---
 
 ## 🎯 Key Business Objectives
@@ -51,7 +49,9 @@ This project focuses on building a cloud-native data platform to analyze histori
 
 ---
 
-## 🧱 Architecture & Approach
+## 🧱 Medallion Architecture & Approach
+
+<img width="400" height="500" alt="image" src="https://github.com/user-attachments/assets/f068eec2-6c75-4f6b-a78f-b53a4b2185cd" />
 
 ### 🥉 Bronze / Raw Layer
 
@@ -85,6 +85,7 @@ This project focuses on building a cloud-native data platform to analyze histori
 ---
 
 ## 🔄 Orchestration & Streaming
+<img width="400" height="500" alt="image" src="https://github.com/user-attachments/assets/8805c1c9-2d58-4a55-84cf-602094cd14e9" />
 
 - Snowpipe  
   - Auto-ingestion when new files land in S3.  
@@ -112,122 +113,8 @@ This project focuses on building a cloud-native data platform to analyze histori
 ---
 
 ## 📐 Data Model (Star Schema)
+ <img width="400" height="500" alt="image" src="https://github.com/user-attachments/assets/69e034e0-f4e3-459c-8014-82888fef0325" />
 
-### 1️⃣ fact_loan – Central Fact Table
-
-| Column                   | Type / Role      | Description                             |
-|--------------------------|------------------|-----------------------------------------|
-| loan_number            | PK               | Unique loan identifier                  |
-| borrower_key           | FK               | Links to dim_borrower                 |
-| guarantor_key          | FK               | Links to dim_guarantor                |
-| country_key            | FK               | Links to dim_country                  |
-| loan_type_key          | FK               | Links to dim_loan_type                |
-| loan_status_key        | FK               | Links to dim_loan_status              |
-| project_key            | FK               | Links to dim_project                  |
-| time_key               | FK               | Links to dim_time                     |
-| currency_key           | FK               | Links to dim_currency                 |
-| original_principal_amount | Measure      | Original committed amount               |
-| cancelled_amount       | Measure          | Amount cancelled                        |
-| undisbursed_amount     | Measure          | Amount not yet disbursed                |
-| disbursed_amount       | Measure          | Total disbursed amount                  |
-| repaid_to_ibrd         | Measure          | Amount repaid to IBRD                   |
-| due_to_ibrd            | Measure          | Amount still due to IBRD                |
-| exchange_adjustment    | Measure          | FX adjustment value                     |
-| borrowers_obligation   | Measure          | Outstanding borrower obligation         |
-| sold_3rd_party         | Measure          | Amount sold to third parties            |
-| repaid_3rd_party       | Measure          | Amount repaid to third parties          |
-| due_3rd_party          | Measure          | Amount due to third parties             |
-| loans_held             | Measure          | Loans currently held                    |
-
----
-
-### 2️⃣ dim_time
-
-| Column                    | Description                               |
-|---------------------------|-------------------------------------------|
-| time_key (PK)           | Surrogate time key                        |
-| Date_ID                 | Numeric or string date ID                 |
-| Full_Date               | Full calendar date                        |
-| Year                    | Year                                      |
-| Quarter                 | Quarter (e.g., Q1, Q2)                    |
-| Month                   | Month number                              |
-| Month_Name              | Month name (e.g., January)               |
-| end_of_period           | End-of-period flag / date                |
-| first_repayment_date    | First repayment date                      |
-| last_repayment_date     | Last repayment date                       |
-| agreement_signing_date  | Loan agreement signing date               |
-| board_approval_date     | Board approval date                       |
-| effective_date          | Date loan becomes effective               |
-| closed_date             | Loan closure date                         |
-| last_disbursement_date  | Last disbursement date                    |
-
----
-
-### 3️⃣ dim_project
-
-| Column         | Description                    |
-|----------------|--------------------------------|
-| project_key (PK) | Surrogate project key     |
-| project_id   | Source project identifier      |
-| project_name | Name of the project            |
-
----
-
-### 4️⃣ dim_borrower
-
-| Column             | Description              |
-|--------------------|--------------------------|
-| borrower_key (PK)| Surrogate borrower key   |
-| borrower         | Borrower name            |
-
----
-
-### 5️⃣ dim_guarantor
-
-| Column              | Description               |
-|---------------------|---------------------------|
-| guarantor_key (PK)| Surrogate guarantor key   |
-| guarantor         | Guarantor name            |
-
----
-
-### 6️⃣ dim_country
-
-| Column                 | Description                         |
-|------------------------|-------------------------------------|
-| country_key (PK)     | Surrogate country key              |
-| country_economy_code | Economy/country code               |
-| country_economy      | Country / economy name             |
-| region               | Geographic region                  |
-
----
-
-### 7️⃣ dim_loan_type
-
-| Column               | Description                  |
-|----------------------|------------------------------|
-| loan_type_key (PK) | Surrogate loan type key      |
-| loan_type          | Loan type (e.g., NPL, CPL)   |
-
----
-
-### 8️⃣ dim_loan_status
-
-| Column                 | Description                |
-|------------------------|----------------------------|
-| loan_status_key (PK) | Surrogate loan status key |
-| loan_status          | Current status of loan    |
-
----
-
-### 9️⃣ dim_currency
-
-| Column                    | Description                        |
-|---------------------------|------------------------------------|
-| currency_key (PK)       | Surrogate currency key            |
-| currency_of_commitment  | Currency of loan commitment       |
-
----
 
 ## 🚀 How to Get Started
 
@@ -241,9 +128,13 @@ This project focuses on building a cloud-native data platform to analyze histori
 
 ---
 
-## 📊 Optional: Streamlit / Dashboard Ideas
+## 📊 Streamlit / Dashboard Ideas
 
 - 📈 Loan cancellation trends by country / region / year.  
 - 🧮 Average processing time and repayment period per country.  
 - 🧱 Drill-down by loan type, **status, and **project.  
 - 🚨 Real-time view of new loans and potential cancellation risk signals.
+  <img width="1591" height="421" alt="image" src="https://github.com/user-attachments/assets/6d09b4e4-0343-4e3e-98b2-8eba0cf58442" />
+  <img width="1610" height="435" alt="image" src="https://github.com/user-attachments/assets/d10c9c5d-7c0e-427e-b262-521351717b12" />
+  <img width="1613" height="447" alt="image" src="https://github.com/user-attachments/assets/b4413880-5341-40e5-a357-cf8df07670ca" />
+  <img width="1591" height="649" alt="image" src="https://github.com/user-attachments/assets/67302caa-6449-4125-b921-d84427236c4a" />
